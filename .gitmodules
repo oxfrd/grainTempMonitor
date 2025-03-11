@@ -1,0 +1,3 @@
+[submodule "grainTempBoard"]
+	path = grainTempBoard
+	url = https://github.com/oxfrd/grainTempBoard
