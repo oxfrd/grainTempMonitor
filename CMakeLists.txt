@@ -33,7 +33,6 @@ add_definitions(-DDEBUG -D${MCU_MODEL})
 #file(GLOB_RECURSE SOURCES
 set(SOURCES
         ${CMAKE_SOURCE_DIR}/src/main.cpp
-        ${CMAKE_SOURCE_DIR}/src/delay.cpp
         )
 
 #set(LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/core/ST/${MCU_MODEL}/linker.ld)

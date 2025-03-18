@@ -80,4 +80,5 @@
         ".gitignore": true,
         "LICENSE": true
     },
+    "cortex-debug.variableUseNaturalFormat": true,
 }

@@ -1,15 +1,17 @@
 //
 // Created by oxford on 30.05.23.
 //
-#include <vector>
-#include "IComponent.h"
 #include "boardInit.h"
 #include "main.h"
 #include "delay.h"
-//#include "IPressureSensor.h"
-#include "string.h"
 
+#include "IComponent.h"
 #include "IGpioOutput.h"
+#include "IInterrupt.h"
+#include "IUart.h"
+#include "IGpioInput.h"
+#include "IPressureSensor.h"
+#include "timeInterrupt.h"
 
 static void errHandler()
 {
@@ -18,25 +20,6 @@ static void errHandler()
         asm("NOP");
     }
 }
-
-// static void func(std::shared_ptr<hal::mcu::mcuManager> x)
-// {
-//     using namespace mcu;
-
-//     std::shared_ptr<gpio::gpioOutput> led{nullptr};
-//     auto getter = led->getPtr(static_cast<uint16_t>(eResourcesList::eGPIO_B2), x);
-//     if (getter.second == eError::eOk)
-//     {
-//         led = std::dynamic_pointer_cast<gpio::gpioOutput>(getter.first);
-//     }
-
-//     led->toggle();
-//     delayMe(40);
-//     led->toggle();
-//     delayMe(40);
-//     led->toggle();
-//     delayMe(40);
-// }
 
 int main()
 {
@@ -47,7 +30,7 @@ int main()
         auto getter = ledRed->getPtr(static_cast<uint16_t>(board::eResourcesList::eGPIO_B2),boardResources);
         if (getter.second == eError::eOk)
         {
-            ledRed = std::dynamic_pointer_cast<hal::gpio::IGpioOutput>(getter.first);
+            ledRed = getter.first;
         } else { errHandler();}
     }
 
@@ -56,83 +39,72 @@ int main()
         auto getter = ledGreen->getPtr(static_cast<uint16_t>(board::eResourcesList::eGPIO_E8),boardResources);
         if (getter.second == eError::eOk)
         {
-            ledGreen = std::dynamic_pointer_cast<hal::gpio::IGpioOutput>(getter.first);
-        } else { errHandler();}
-    }
-    
-    /*
-    std::shared_ptr<gpio::gpioInput> A0{nullptr};
-    {
-        auto getter = A0->getPtr(static_cast<uint16_t>(eResourcesList::eGPIO_A0),mcu);
-        if (getter.second == eError::eOk)
-        {
-            A0 = std::dynamic_pointer_cast<gpio::gpioInput>(getter.first);
+            ledGreen = getter.first;
         } else { errHandler();}
     }
 
-    std::shared_ptr<gpio::gpioInput> A1{nullptr};
+    std::shared_ptr<hal::uart::IUart> uart{nullptr};
     {
-        auto getter = A1->getPtr(static_cast<uint16_t>(eResourcesList::eGPIO_A1),mcu);
+        auto getter = uart->getPtr(static_cast<uint16_t>(board::eResourcesList::eUART2),boardResources);
         if (getter.second == eError::eOk)
         {
-            A1 = std::dynamic_pointer_cast<gpio::gpioInput>(getter.first);
-        } else { errHandler();}
-    }
-    
-    std::shared_ptr<gpio::gpioInput> A2{nullptr};
-    {
-        auto getter = A2->getPtr(static_cast<uint16_t>(eResourcesList::eGPIO_A2),mcu);
-        if (getter.second == eError::eOk)
-        {
-            A2 = std::dynamic_pointer_cast<gpio::gpioInput>(getter.first);
-        } else { errHandler();}
-    }
-    
-    std::shared_ptr<gpio::gpioInput> A3{nullptr};
-    {
-        auto getter = A3->getPtr(static_cast<uint16_t>(eResourcesList::eGPIO_A3),mcu);
-        if (getter.second == eError::eOk)
-        {
-            A3 = std::dynamic_pointer_cast<gpio::gpioInput>(getter.first);
-        } else { errHandler();}
-    }
-    
-    std::shared_ptr<gpio::gpioInput> A5{nullptr};
-    {
-        auto getter = A5->getPtr(static_cast<uint16_t>(eResourcesList::eGPIO_A5),mcu);
-        if (getter.second == eError::eOk)
-        {
-            A5 = std::dynamic_pointer_cast<gpio::gpioInput>(getter.first);
-        } else { errHandler();}
-    }
-    std::shared_ptr<interrupt::timeInterrupt> interrupt{nullptr};
-    {
-        auto getter = interrupt->getPtr(static_cast<uint16_t>(eResourcesList::eIntTim2),mcu);
-        if (getter.second == eError::eOk)
-        {
-            interrupt = std::dynamic_pointer_cast<interrupt::timeInterrupt>(getter.first);
+            uart = getter.first;
         } else { errHandler();}
     }
 
-    std::shared_ptr<uart::uart> uart{nullptr};
+    std::shared_ptr<hal::gpio::IGpioInput> A0{nullptr};
     {
-        auto getter = uart->getPtr(static_cast<uint16_t>(eResourcesList::eUART2),mcu);
+        auto getter = A0->getPtr(static_cast<uint16_t>(board::eResourcesList::eGPIO_A0),boardResources);
         if (getter.second == eError::eOk)
         {
-            uart = std::dynamic_pointer_cast<uart::uart>(getter.first);
+            A0 = std::dynamic_pointer_cast<hal::gpio::IGpioInput>(getter.first);
+        } else { errHandler();}
+    }
+
+    std::shared_ptr<hal::gpio::IGpioInput> A1{nullptr};
+    {
+        auto getter = A1->getPtr(static_cast<uint16_t>(board::eResourcesList::eGPIO_A1),boardResources);
+        if (getter.second == eError::eOk)
+        {
+            A1 = std::dynamic_pointer_cast<hal::gpio::IGpioInput>(getter.first);
+        } else { errHandler();}
+    }
+    
+    std::shared_ptr<hal::gpio::IGpioInput> A2{nullptr};
+    {
+        auto getter = A2->getPtr(static_cast<uint16_t>(board::eResourcesList::eGPIO_A2),boardResources);
+        if (getter.second == eError::eOk)
+        {
+            A2 = std::dynamic_pointer_cast<hal::gpio::IGpioInput>(getter.first);
+        } else { errHandler();}
+    }
+    
+    std::shared_ptr<hal::gpio::IGpioInput> A3{nullptr};
+    {
+        auto getter = A3->getPtr(static_cast<uint16_t>(board::eResourcesList::eGPIO_A3),boardResources);
+        if (getter.second == eError::eOk)
+        {
+            A3 = std::dynamic_pointer_cast<hal::gpio::IGpioInput>(getter.first);
+        } else { errHandler();}
+    }
+    
+    std::shared_ptr<hal::gpio::IGpioInput> A5{nullptr};
+    {
+        auto getter = A5->getPtr(static_cast<uint16_t>(board::eResourcesList::eGPIO_A5),boardResources);
+        if (getter.second == eError::eOk)
+        {
+            A5 = std::dynamic_pointer_cast<hal::gpio::IGpioInput>(getter.first);
         } else { errHandler();}
     }
 
     std::shared_ptr<hal::sensor::IPressureSensor> pressureSensor{nullptr};
     {
-        auto getter = pressureSensor->getPtr(static_cast<uint16_t>(eResourcesList::eBMP280),mcu);
+        auto getter = pressureSensor->getPtr(static_cast<uint16_t>(board::eResourcesList::eBMP280),boardResources);
         if (getter.second == eError::eOk)
         {
             pressureSensor = std::dynamic_pointer_cast<hal::sensor::IPressureSensor>(getter.first);
         } else { errHandler();}
     }
-
-    interrupt->enable();
 
     auto a0State = false;
     auto a1State = false;
@@ -148,18 +120,19 @@ int main()
     float pressure{0};
     float temperature{0};
     uint8_t temp[30];
-    */
+    uint8_t sizeToSend{};
+
     while (true)
     {
-        /*
+        
         a0State = A0->getState();
         a1State = A1->getState();
         a2State = A2->getState();
         a3State = A3->getState();
         a5State = A5->getState();
-        */
+        
         ledRed->toggle();
-/*
+        
         if(tick)
         {
             uart->send(text, 12);
@@ -173,12 +146,12 @@ int main()
 
         pressureSensor->getPressure(&pressure);
         pressure /= 100; // Pa -> hPa
-        sprintf((char*)temp, "Press:%.2fhPa\n", pressure);
-        uart->send(temp, 18);
+        sizeToSend = sprintf((char*)temp, "Press:%.2fhPa\n", pressure);
+        uart->send(temp, sizeToSend);
 
         pressureSensor->getTemperature(&temperature);
-        sprintf((char*)temp, "Temp:%.2fC\n", temperature);
-        uart->send(temp, 12);
+        sizeToSend = sprintf((char*)temp, "Temp:%.2fC\n", temperature);
+        uart->send(temp, sizeToSend);
         delayMe(500);
         
         while(a0State || a1State || a2State || a3State || a5State)
@@ -193,7 +166,7 @@ int main()
         if((err == eError::eOk) && (newByte == '5'))
         {
             ledGreen->toggle();
-        }*/
+        }
         delayMe(500);
     } 
     return 0;
