@@ -12,6 +12,10 @@
 #include "IGpioInput.h"
 #include "IPressureSensor.h"
 #include "timeInterrupt.h"
+#include "IGpioOutAndInput.h"
+#include "IPort.h"
+
+#pragma GCC optimize ("O0")
 
 static void errHandler()
 {
@@ -19,6 +23,38 @@ static void errHandler()
     {
         asm("NOP");
     }
+}
+
+void letsPlayAGame(std::shared_ptr<hal::gpio::IGpioOutAndInput> pin,
+                    std::shared_ptr<hal::gpio::IGpioOutput> ledGreen)
+{
+    bool pingPong = true;
+    pin->setPinMode(hal::gpio::eMode::eInput);
+    
+    if (pin->getState() == true)
+    {
+        pin->setPinMode(hal::gpio::eMode::eOutput);
+        
+        for(int i = 0 ; i < 8 ; i++)
+        {
+            ledGreen->toggle();
+            if (pingPong == true)
+            {
+                pin->on();
+                pingPong = false;
+            }
+            else
+            {
+                pin->off();
+                pingPong = true;
+            }
+            delayMe(500);
+        }
+
+        pin->setPinMode(hal::gpio::eMode::eInput);
+    }
+
+    return;
 }
 
 int main()
@@ -106,6 +142,15 @@ int main()
         } else { errHandler();}
     }
 
+    std::shared_ptr<hal::gpio::IGpioOutAndInput> D0{nullptr};
+    {
+        auto getter = D0->getPtr(static_cast<uint16_t>(board::eResourcesList::eGPIO_D0),boardResources);
+        if (getter.second == eError::eOk)
+        {
+            D0 = getter.first;
+        } else { errHandler();}
+    }
+
     auto a0State = false;
     auto a1State = false;
     auto a2State = false;
@@ -167,6 +212,8 @@ int main()
         {
             ledGreen->toggle();
         }
+
+        letsPlayAGame(D0, ledGreen);
         delayMe(500);
     } 
     return 0;
