@@ -1,6 +1,8 @@
 //
 // Created by oxford on 30.05.23.
 //
+#include <chrono>
+
 #include "boardInit.h"
 #include "main.h"
 #include "delay.h"
@@ -14,8 +16,12 @@
 #include "timeInterrupt.h"
 #include "IGpioOutAndInput.h"
 #include "IPort.h"
+#include "IDelay.h"
 
 #pragma GCC optimize ("O0")
+using namespace std::chrono_literals;
+
+std::shared_ptr<hal::delay::IDelay> mgDelay{nullptr};
 
 static void errHandler()
 {
@@ -48,7 +54,7 @@ void letsPlayAGame(std::shared_ptr<hal::gpio::IGpioOutAndInput> pin,
                 pin->off();
                 pingPong = true;
             }
-            delayMe(500);
+            mgDelay->delayMs(500ms);
         }
 
         pin->setPinMode(hal::gpio::eMode::eInput);
@@ -151,6 +157,14 @@ int main()
         } else { errHandler();}
     }
 
+    {
+        auto getter = mgDelay->getPtr(static_cast<uint16_t>(board::eResourcesList::eDelay),boardResources);
+        if (getter.second == eError::eOk)
+        {
+            mgDelay = getter.first;
+        } else { errHandler();}
+    }
+
     auto a0State = false;
     auto a1State = false;
     auto a2State = false;
@@ -197,13 +211,12 @@ int main()
         pressureSensor->getTemperature(&temperature);
         sizeToSend = sprintf((char*)temp, "Temp:%.2fC\n", temperature);
         uart->send(temp, sizeToSend);
-        delayMe(500);
+        mgDelay->delayMs(500ms);
         
         while(a0State || a1State || a2State || a3State || a5State)
         {
-            constexpr std::uint32_t x{500};
             ledGreen->toggle();
-            delayMe(x);
+            mgDelay->delayMs(500ms);
             break;
         }
         err = uart->get(&newByte, 1);
@@ -214,7 +227,7 @@ int main()
         }
 
         letsPlayAGame(D0, ledGreen);
-        delayMe(500);
+        mgDelay->delayMs(500ms);
     } 
     return 0;
 }
