@@ -2,6 +2,7 @@
 // Created by oxford on 30.05.23.
 //
 #include <chrono>
+#include <cstring>
 
 #include "boardInit.h"
 #include "main.h"
@@ -13,10 +14,10 @@
 #include "IUart.h"
 #include "IGpioInput.h"
 #include "IPressureSensor.h"
-#include "timeInterrupt.h"
 #include "IGpioOutAndInput.h"
 #include "IPort.h"
 #include "IDelay.h"
+#include "ITemperatureSensor.h"
 
 #pragma GCC optimize ("O0")
 using namespace std::chrono_literals;
@@ -54,7 +55,7 @@ void letsPlayAGame(std::shared_ptr<hal::gpio::IGpioOutAndInput> pin,
                 pin->off();
                 pingPong = true;
             }
-            mgDelay->delayMs(500ms);
+            mgDelay->delayMs(500);
         }
 
         pin->setPinMode(hal::gpio::eMode::eInput);
@@ -111,10 +112,35 @@ int main()
         } else { errHandler();}
     }
 
+    std::shared_ptr<hal::sensor::ITemperatureSensor> temperature1{nullptr};
+    {
+        auto getter = temperature1->getPtr(static_cast<uint16_t>(board::eResourcesList::eDS18B20_1),boardResources);
+        if (getter.second == eError::eOk)
+        {
+            temperature1 = getter.first;
+        } else { errHandler();}
+    }
+
+    std::uint64_t address{};
+    std::vector<uint8_t> addrVector(8);
+
+    auto result = temperature1->getAddress(&address);
+    if (result == eError::eOk)
+    {
+        std::memcpy(addrVector.data(), &address, 8);
+        // uart->sendVector(addrVector);
+        uart->sendVector(addrVector);
+        ledRed->off();
+    }
+    else
+    {
+        ledRed->on();
+    }
+
     while (true)
     {
-        ledRed->toggle();
-        mgDelay->delayMs(10ms);
+        ledGreen->toggle();
+        mgDelay->delayMs(1000);
     }
 
     return 0;

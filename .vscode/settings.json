@@ -68,9 +68,10 @@
         "future": "cpp",
         "mutex": "cpp",
         "semaphore": "cpp",
-        "stop_token": "cpp"
+        "stop_token": "cpp",
+        "cassert": "cpp"
     },
-    "cmake.configureOnOpen": true,
+    // "cmake.configureOnOpen": true,
     "cortex-debug.gdbPath": "/usr/bin/gdb-multiarch",
     "cortex-debug.stutilPath": "/usr/bin/st-util",
     "editor.tabSize": 4,

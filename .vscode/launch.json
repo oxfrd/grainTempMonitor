@@ -13,6 +13,7 @@
             "device": "STM32L476",
             "svdFile": "${workspaceFolder}/grainTempBoard/HAL/core/ST/STM32L476/Startup/stm32l4x6.svd",
             "openOCDLaunchCommands": ["init", "reset init"],
+            
             "configFiles": [
                 "interface/stlink.cfg", "target/stm32l4x.cfg"
             ],
@@ -26,7 +27,8 @@
                  "samplesPerSecond": 1
              },
             "stlinkPath": "/usr/bin",
-            "runToEntryPoint": "true",
+            "runToEntryPoint": null,
+            // "runToEntryPoint": "main",
             "showDevDebugTimestamps": false
         },
     ]

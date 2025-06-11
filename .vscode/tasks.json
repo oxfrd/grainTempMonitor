@@ -2,9 +2,22 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "buildd",
+            "label": "buildMe",
             "type": "shell",
             "command": "make",
+            "args": [],
+            "options": {
+                "cwd": "${workspaceFolder}/build"
+            },
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
+            "label": "cmakeConfigAndBuild",
+            "type": "shell",
+            "command": [ "cmake .. -DCMAKE_BUILD_TYPE=Debug -B . -G 'Unix Makefiles'",
+                        "make"
+                        ],
             "args": [],
             "options": {
                 "cwd": "${workspaceFolder}/build"
