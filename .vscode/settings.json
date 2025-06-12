@@ -69,7 +69,8 @@
         "mutex": "cpp",
         "semaphore": "cpp",
         "stop_token": "cpp",
-        "cassert": "cpp"
+        "cassert": "cpp",
+        "cstring": "cpp"
     },
     // "cmake.configureOnOpen": true,
     "cortex-debug.gdbPath": "/usr/bin/gdb-multiarch",
@@ -81,5 +82,5 @@
         ".gitignore": true,
         "LICENSE": true
     },
-    "cortex-debug.variableUseNaturalFormat": true,
+    "cortex-debug.variableUseNaturalFormat": false,
 }

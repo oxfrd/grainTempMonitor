@@ -1,7 +1,6 @@
 //
 // Created by oxford on 30.05.23.
 //
-#include <chrono>
 #include <cstring>
 
 #include "boardInit.h"
@@ -18,9 +17,9 @@
 #include "IPort.h"
 #include "IDelay.h"
 #include "ITemperatureSensor.h"
+#include <cassert>
 
 #pragma GCC optimize ("O0")
-using namespace std::chrono_literals;
 
 std::shared_ptr<hal::delay::IDelay> mgDelay{nullptr};
 
@@ -32,37 +31,61 @@ static void errHandler()
     }
 }
 
-void letsPlayAGame(std::shared_ptr<hal::gpio::IGpioOutAndInput> pin,
-                    std::shared_ptr<hal::gpio::IGpioOutput> ledGreen)
+class fastLogger
 {
-    bool pingPong = true;
-    pin->setPinMode(hal::gpio::eMode::eInput);
-    
-    if (pin->getState() == true)
-    {
-        pin->setPinMode(hal::gpio::eMode::eOutput);
-        
-        for(int i = 0 ; i < 8 ; i++)
+    public:
+        fastLogger(std::shared_ptr<hal::uart::IUart> uart):
+        mUart(uart)
         {
-            ledGreen->toggle();
-            if (pingPong == true)
-            {
-                pin->on();
-                pingPong = false;
-            }
-            else
-            {
-                pin->off();
-                pingPong = true;
-            }
-            mgDelay->delayMs(500);
+            assert(mUart != nullptr);
+            printWelcomeMessage();
+        }
+        
+        void log(const char* text)
+        {
+            mSizeToSend = sprintf((char*)mAcc, text);
+            if (mSizeToSend > cAccSize)
+                return;
+
+            mUart->send(mAcc, mSizeToSend);
         }
 
-        pin->setPinMode(hal::gpio::eMode::eInput);
-    }
+        void log(const char* text, float fltVal)
+        {
+            mSizeToSend = sprintf((char*)mAcc, text, fltVal);
+            if (mSizeToSend > cAccSize)
+                return;
 
-    return;
-}
+            mUart->send(mAcc, mSizeToSend);
+        }
+
+        void log(const char* text, uint64_t val)
+        {
+            mSizeToSend = sprintf((char*)mAcc, text, val);
+            if (mSizeToSend > cAccSize)
+                return;
+
+            mUart->send(mAcc, mSizeToSend);
+        }
+
+    private:
+        static constexpr uint8_t cAccSize{60};
+        std::shared_ptr<hal::uart::IUart> mUart{nullptr};
+        uint8_t mAcc[cAccSize];
+        uint8_t mSizeToSend{};
+
+        void printWelcomeMessage()
+        {
+            log("/*************************************************/\n");
+            log("/*                                               */\n");
+            log("/*    !!! WELCOME TO GRAIN TEMPERATURE APP !!!   */\n");
+            log("/*       author: oxfrd                           */\n");
+            log("/*       v0.1                                    */\n");
+            log("/*       MIT license                             */\n");
+            log("/*                                               */\n");
+            log("/*************************************************/\n");
+        }
+};
 
 int main()
 {
@@ -95,15 +118,6 @@ int main()
         } else { errHandler();}
     }
 
-    std::shared_ptr<hal::gpio::IGpioOutAndInput> D0{nullptr};
-    {
-        auto getter = D0->getPtr(static_cast<uint16_t>(board::eResourcesList::eGPIO_D0),boardResources);
-        if (getter.second == eError::eOk)
-        {
-            D0 = getter.first;
-        } else { errHandler();}
-    }
-
     {
         auto getter = mgDelay->getPtr(static_cast<uint16_t>(board::eResourcesList::eDelay),boardResources);
         if (getter.second == eError::eOk)
@@ -121,26 +135,29 @@ int main()
         } else { errHandler();}
     }
 
+    auto log = fastLogger(uart);
     std::uint64_t address{};
-    std::vector<uint8_t> addrVector(8);
 
-    auto result = temperature1->getAddress(&address);
-    if (result == eError::eOk)
+    auto err = temperature1->getAddress(&address);
+    if (err == eError::eOk)
     {
-        std::memcpy(addrVector.data(), &address, 8);
-        // uart->sendVector(addrVector);
-        uart->sendVector(addrVector);
         ledRed->off();
+        log.log("[0]: sensor address: 0x%llx\n", address);
     }
     else
     {
         ledRed->on();
     }
 
+    float temperature{};
+
     while (true)
     {
         ledGreen->toggle();
-        mgDelay->delayMs(1000);
+        err = temperature1->getTemperature(&temperature);
+        log.log("Temp: %.2fC\n", temperature);
+
+        mgDelay->delayMs(500);
     }
 
     return 0;
