@@ -76,14 +76,14 @@ class fastLogger
 
         void printWelcomeMessage()
         {
-            log("/*************************************************/\n");
-            log("/*                                               */\n");
-            log("/*    !!! WELCOME TO GRAIN TEMPERATURE APP !!!   */\n");
-            log("/*       author: oxfrd                           */\n");
-            log("/*       v0.1                                    */\n");
-            log("/*       MIT license                             */\n");
-            log("/*                                               */\n");
-            log("/*************************************************/\n");
+            log("/*************************************************/'\r\n");
+            log("/*                                               */'\r\n");
+            log("/*    !!! WELCOME TO GRAIN TEMPERATURE APP !!!   */'\r\n");
+            log("/*       author: oxfrd                           */'\r\n");
+            log("/*       v0.1                                    */'\r\n");
+            log("/*       MIT license                             */'\r\n");
+            log("/*                                               */'\r\n");
+            log("/*************************************************/'\r\n");
         }
 };
 
@@ -142,7 +142,7 @@ int main()
     if (err == eError::eOk)
     {
         ledRed->off();
-        log.log("[0]: sensor address: 0x%llx\n", address);
+        log.log("[0]: sensor address: 0x%llx\r\n", address);
     }
     else
     {
@@ -155,7 +155,7 @@ int main()
     {
         ledGreen->toggle();
         err = temperature1->getTemperature(&temperature);
-        log.log("Temp: %.2fC\n", temperature);
+        log.log("[0]: %.2fC\r\n", temperature);
 
         mgDelay->delayMs(500);
     }
