@@ -109,12 +109,12 @@ int main()
         } else { errHandler();}
     }
 
-    std::shared_ptr<hal::uart::IUart> uart{nullptr};
+    std::shared_ptr<hal::uart::IUart> uart2{nullptr};
     {
-        auto getter = uart->getPtr(static_cast<uint16_t>(board::eResourcesList::eUART2),boardResources);
+        auto getter = uart2->getPtr(static_cast<uint16_t>(board::eResourcesList::eUART2),boardResources);
         if (getter.second == eError::eOk)
         {
-            uart = getter.first;
+            uart2 = getter.first;
         } else { errHandler();}
     }
 
@@ -135,7 +135,18 @@ int main()
         } else { errHandler();}
     }
 
-    auto log = fastLogger(uart);
+    std::shared_ptr<hal::uart::IUart> uart1{nullptr};
+    {
+        auto getter = uart1->getPtr(static_cast<uint16_t>(board::eResourcesList::eUART1),boardResources);
+        if (getter.second == eError::eOk)
+        {
+            uart1 = getter.first;
+        } else { errHandler();}
+    }
+
+    auto log = fastLogger(uart2);
+    auto logBluetooth = fastLogger(uart1);
+
     std::uint64_t address{};
 
     auto err = temperature1->getAddress(&address);
@@ -143,6 +154,7 @@ int main()
     {
         ledRed->off();
         log.log("[0]: sensor address: 0x%llx\r\n", address);
+        logBluetooth.log("[0]: sensor address: 0x%llx\r\n", address);
     }
     else
     {
@@ -156,7 +168,7 @@ int main()
         ledGreen->toggle();
         err = temperature1->getTemperature(&temperature);
         log.log("[0]: %.2fC\r\n", temperature);
-
+        logBluetooth.log("[0]: %.2fC\r\n", temperature);
         mgDelay->delayMs(500);
     }
 
