@@ -68,6 +68,15 @@ class fastLogger
             mUart->send(mAcc, mSizeToSend);
         }
 
+        void log(const char* text, uint8_t val)
+        {
+            mSizeToSend = sprintf((char*)mAcc, text, val);
+            if (mSizeToSend > cAccSize)
+                return;
+
+            mUart->send(mAcc, mSizeToSend);
+        }
+
     private:
         static constexpr uint8_t cAccSize{60};
         std::shared_ptr<hal::uart::IUart> mUart{nullptr};
@@ -135,6 +144,33 @@ int main()
         } else { errHandler();}
     }
 
+    std::shared_ptr<hal::sensor::ITemperatureSensor> temperature2{nullptr};
+    {
+        auto getter = temperature2->getPtr(static_cast<uint16_t>(board::eResourcesList::eDS18B20_2),boardResources);
+        if (getter.second == eError::eOk)
+        {
+            temperature2 = getter.first;
+        } else { errHandler();}
+    }
+
+    std::shared_ptr<hal::sensor::ITemperatureSensor> temperature3{nullptr};
+    {
+        auto getter = temperature3->getPtr(static_cast<uint16_t>(board::eResourcesList::eDS18B20_3),boardResources);
+        if (getter.second == eError::eOk)
+        {
+            temperature3 = getter.first;
+        } else { errHandler();}
+    }
+
+    std::shared_ptr<hal::sensor::ITemperatureSensor> temperature4{nullptr};
+    {
+        auto getter = temperature4->getPtr(static_cast<uint16_t>(board::eResourcesList::eDS18B20_4),boardResources);
+        if (getter.second == eError::eOk)
+        {
+            temperature4 = getter.first;
+        } else { errHandler();}
+    }
+
     std::shared_ptr<hal::uart::IUart> uart1{nullptr};
     {
         auto getter = uart1->getPtr(static_cast<uint16_t>(board::eResourcesList::eUART1),boardResources);
@@ -147,28 +183,89 @@ int main()
     auto log = fastLogger(uart2);
     auto logBluetooth = fastLogger(uart1);
 
-    std::uint64_t address{};
-
-    auto err = temperature1->getAddress(&address);
-    if (err == eError::eOk)
-    {
-        ledRed->off();
-        log.log("[0]: sensor address: 0x%llx\r\n", address);
-        logBluetooth.log("[0]: sensor address: 0x%llx\r\n", address);
-    }
-    else
-    {
-        ledRed->on();
-    }
-
     float temperature{};
 
+    // uint8_t testSensorAddress[8] = {0x28, 0xda, 0x20, 0xbd, 0x00, 0x00, 0x00, 0x00};
+    // uint8_t lowestSensorAddress[8] = {0x28, 0xe8, 0x3b, 0xbd, 0x00, 0x00, 0x00, 0x00};
+    // uint8_t middleSensorAddress[8] = {0x28, 0xb9, 0xf5, 0xbf, 0x00, 0x00, 0x00, 0x00};
+    // uint8_t highestSensorAddress[8] = {0x28, 0xbc, 0xe6, 0xbf, 0x00, 0x00, 0x00, 0x00};
+
+    // testSensorAddress[7] = crc8(testSensorAddress,7);
+    // lowestSensorAddress[7] = crc8(lowestSensorAddress,7);
+    // middleSensorAddress[7] = crc8(middleSensorAddress,7);
+    // highestSensorAddress[7] = crc8(highestSensorAddress,7);
+
+    // temperature1->setAddress(testSensorAddress);
+    // temperature2->setAddress(lowestSensorAddress);
+    // temperature3->setAddress(middleSensorAddress);
+    // auto err = temperature4->setAddress(highestSensorAddress);
+
+    const uint64_t u64testSensorAddress=0xbd20da28;
+    const uint64_t u64lowestSensorAddress=0xbd3be828;
+    const uint64_t u64middleSensorAddress=0xbff5b928;
+    const uint64_t u64highestSensorAddress=0xbfe6bc28;
+
+
+    logBluetooth.log("[0]: sensor address: 0x%llx\r\n", u64testSensorAddress);
+    logBluetooth.log("[1]: sensor address: 0x%llx\r\n", u64lowestSensorAddress);
+    logBluetooth.log("[2]: sensor address: 0x%llx\r\n", u64middleSensorAddress);
+    logBluetooth.log("[3]: sensor address: 0x%llx\r\n", u64highestSensorAddress);
+    logBluetooth.log("\r\n");
+
+    log.log("[0]: sensor address: 0x%llx\r\n", u64testSensorAddress);
+    log.log("[1]: sensor address: 0x%llx\r\n", u64lowestSensorAddress);
+    log.log("[2]: sensor address: 0x%llx\r\n", u64middleSensorAddress);
+    log.log("[3]: sensor address: 0x%llx\r\n", u64highestSensorAddress);
+    log.log("\r\n");
+
+    logBluetooth.log("[0]: test sensor\r\n");
+    logBluetooth.log("[1]: lowest sensor\r\n");
+    logBluetooth.log("[2]: middle sensor\r\n");
+    logBluetooth.log("[3]: top sensor\r\n");
+    logBluetooth.log("\r\n");
+
+    log.log("[0]: test sensor\r\n");
+    log.log("[1]: lowest sensor\r\n");
+    log.log("[2]: middle sensor\r\n");
+    log.log("[3]: top sensor\r\n");
+    log.log("\r\n");
+    
+    eError err;
     while (true)
     {
         ledGreen->toggle();
+        
         err = temperature1->getTemperature(&temperature);
-        log.log("[0]: %.2fC\r\n", temperature);
-        logBluetooth.log("[0]: %.2fC\r\n", temperature);
+        if (err == eError::eOk)
+        {
+            log.log("[0]: %.2fC\r\n", temperature);
+            logBluetooth.log("[0]: %.2fC\r\n", temperature);
+        }
+
+        err = temperature2->getTemperature(&temperature);
+        if (err == eError::eOk)
+        {
+            log.log("[1]: %.2fC\r\n", temperature);
+            logBluetooth.log("[1]: %.2fC\r\n", temperature);
+        }
+
+        err = temperature3->getTemperature(&temperature);
+        if (err == eError::eOk)
+        {
+            log.log("[2]: %.2fC\r\n", temperature);
+            logBluetooth.log("[2]: %.2fC\r\n", temperature);
+        }
+
+        err = temperature4->getTemperature(&temperature);
+        if (err == eError::eOk)
+        {
+            log.log("[3]: %.2fC\r\n", temperature);
+            logBluetooth.log("[3]: %.2fC\r\n", temperature);
+        }
+
+        log.log("\r\n");
+        logBluetooth.log("\r\n");
+
         mgDelay->delayMs(500);
     }
 
